@@ -1,0 +1,35 @@
+import firebase from 'firebase'
+
+export default ({
+  store
+}) => {
+  if (process.browser) {
+    const setUser = user => {
+      if (!user) {
+        store.commit('auth/setUser', null)
+        return false
+      }
+
+      store.commit('auth/setUser', user.providerData[0])
+      store.commit('auth/setUid', user.uid)
+      firebase.firestore().collection('users').doc(user.uid).onSnapshot(doc => {
+        const credential = doc.data()
+        store.commit('auth/setCredential', credential)
+      }, _ => _)
+      return true
+    }
+    firebase.auth().getRedirectResult().then((result) => {
+      const user = result.user
+      if (!setUser(user)) {
+        return
+      }
+
+      const credential = result.credential
+      store.dispatch('auth/setCredential', {
+        uid: user.uid,
+        credential
+      })
+    })
+    firebase.auth().onAuthStateChanged(setUser)
+  }
+}

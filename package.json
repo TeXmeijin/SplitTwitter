@@ -1,0 +1,43 @@
+{
+  "name": "split-twitter",
+  "version": "1.0.0",
+  "description": "長い文章をいい感じの長さに区切ってツイートできます。使い方は文章を書いて投稿ボタンを押すだけ！",
+  "author": "Texmeijin",
+  "private": true,
+  "scripts": {
+    "dev": "nuxt",
+    "build": "nuxt build",
+    "start": "nuxt start",
+    "deploy": "nuxt build && firebase deploy",
+    "generate": "nuxt generate",
+    "lint": "eslint --ext .js,.vue --ignore-path .gitignore .",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@nuxtjs/axios": "^5.3.6",
+    "@nuxtjs/pwa": "^3.0.0-0",
+    "firebase": "^6.3.5",
+    "lodash": "^4.17.15",
+    "nuxt": "^2.8.0",
+    "twitter-text": "^3.0.0",
+    "vue-material-design-icons": "^3.3.1"
+  },
+  "devDependencies": {
+    "@nuxtjs/eslint-config": "^1.0.1",
+    "@nuxtjs/eslint-module": "^1.0.0",
+    "@nuxtjs/style-resources": "^1.0.0",
+    "@vue/test-utils": "^1.0.0-beta.27",
+    "babel-eslint": "^10.0.1",
+    "babel-jest": "^24.1.0",
+    "cross-env": "^5.2.0",
+    "eslint": "^6.1.0",
+    "eslint-plugin-nuxt": ">=0.4.2",
+    "eslint-plugin-vue": "^5.2.3",
+    "jest": "^24.1.0",
+    "node-sass": "^4.12.0",
+    "pug": "^2.0.3",
+    "pug-plain-loader": "^1.0.0",
+    "sass-loader": "^7.2.0",
+    "vue-jest": "^4.0.0-0"
+  }
+}

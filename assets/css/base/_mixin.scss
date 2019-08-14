@@ -1,0 +1,25 @@
+/* media query */
+
+$breakpoints: ('sp': 'screen and (max-width: 768px)', 'pc': 'screen and (min-width: 769px)', ) !default;
+
+@mixin mq($breakpoint: pc) {
+  @media #{map-get($breakpoints, $breakpoint)} {
+    @content;
+  }
+}
+
+// https://spyweb.media/2017/12/04/ie-edge-css-hacks/
+@mixin ie9_11 {
+  @include mq {
+    @media screen and (min-width: 0\0) and (min-resolution: +72dpi) {
+      @content;
+    }
+  }
+}
+
+@mixin card {
+  border: 1px solid $gray-ee;
+  border-radius: 3px;
+  box-shadow: 0 2px 6px 0 rgba(0, 0, 0, .1);
+  background: $white;
+}

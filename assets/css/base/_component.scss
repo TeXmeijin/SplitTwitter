@@ -1,0 +1,95 @@
+.__baseText {
+  font-size: 1.3rem;
+  line-height: 2rem;
+  letter-spacing: 3px;
+}
+
+.s-title {
+  padding: 20px 0;
+  font-size: 2.4rem;
+  text-align: center;
+}
+
+.s-subtitle {
+  padding: 20px 0;
+  font-size: 2rem;
+}
+
+.s-paragraph {
+  @extend .__baseText;
+  margin: 20px 0;
+  color: $body;
+
+  &.small {
+    font-size: 1rem;
+  }
+}
+
+.s-textarea {
+  @extend .__baseText;
+  font-size: 1rem;
+
+  display: flex;
+  padding: 10px;
+  border: 4px solid $gray-light-2;
+  border-radius: 10px;
+
+  &.block {
+    width: 100%;
+    flex: 1;
+  }
+
+  &::placeholder {
+    color: $gray-light-2;
+  }
+}
+
+.s-avatar {
+  display: block;
+  width: 40px;
+  height: 40px;
+  border-radius: 20px;
+}
+
+.s-button {
+  @extend .__baseText;
+  cursor: pointer;
+  display: flex;
+  padding: 20px;
+  justify-content: center;
+  color: $white;
+  background: $primary;
+  font-family: 'Keion';
+  border: 0;
+  border-radius: 10px;
+  transition: 0.2s;
+
+  &.block {
+    width: 100%;
+    flex: 1;
+  }
+
+  &.abnormal {
+    padding: 10px 20px;
+    font-size: 1.2rem;
+    background: $white;
+    color: $secondary;
+
+    &:hover {
+      background: $gray-light-3;
+    }
+  }
+
+  &:disabled {
+    cursor: auto;
+    background: $gray-light-2;
+
+    &:hover {
+      background: $gray-light-2;
+    }
+  }
+
+  &:hover {
+    background: lighten($primary, 10%);
+  }
+}
