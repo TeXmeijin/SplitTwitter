@@ -7,7 +7,7 @@ export default {
    ** Headers of the page
    */
   head: {
-    title: '分割ったー | 長い投稿でもを自動で分割・ツイート！',
+    title: '分割ったー | 長い投稿を自動で分割・ツイート！',
     meta: [{
         charset: 'utf-8'
       },
@@ -57,6 +57,10 @@ export default {
     '@nuxtjs/axios',
     '@nuxtjs/pwa',
     '@nuxtjs/style-resources',
+    ['@nuxtjs/google-analytics', {
+      id: 'UA-143780066-2',
+      dev: false
+    }]
   ],
   /*
    ** Axios module configuration
