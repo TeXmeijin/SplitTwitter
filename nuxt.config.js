@@ -70,6 +70,13 @@ export default {
    ** See https://axios.nuxtjs.org/options
    */
   axios: {},
+  workbox: {
+    runtimeConfig: [{
+      urlPattern: '/_nuxt/*',
+      handler: 'networkFirst',
+      method: 'GET'
+    }]
+  },
   styleResources: {
     scss: [
       '~/assets/css/main.scss'
