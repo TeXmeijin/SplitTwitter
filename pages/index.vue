@@ -41,20 +41,21 @@
           button.logout__button.s-button.abnormal(@click="onLogout(uid)") ログアウト
 </template>
 
-<script>
+<script lang="ts">
 import { mapState, mapActions } from "vuex";
+import { Component, Vue } from "vue-property-decorator";
 import twitter from "twitter-text";
 import max from "lodash/max";
-import CheckboxBlankOutline from "vue-material-design-icons/CheckboxBlankOutline.vue";
-import CheckboxMarked from "vue-material-design-icons/CheckboxMarked.vue";
-import Settings from "vue-material-design-icons/Settings.vue";
+// import * as CheckboxBlankOutline from "vue-material-design-icons/CheckboxBlankOutline.vue";
+// import * as CheckboxMarked from "vue-material-design-icons/CheckboxMarked.vue";
+// import * as Settings from "vue-material-design-icons/Settings.vue";
 
-export default {
-  components: {
-    CheckboxBlankOutline,
-    CheckboxMarked,
-    Settings
-  },
+@Component({
+  // components: {
+  //   CheckboxBlankOutline,
+  //   CheckboxMarked,
+  //   Settings
+  // },
   computed: {
     ...mapState("auth", ["user", "uid", "credential"]),
     calcedContent: {
@@ -192,7 +193,19 @@ export default {
       }
     };
   }
-};
+})
+export default class Index extends Vue {
+  content: string = "";
+  MAX_LENGTH: number = 3000;
+  MAX_LENGTH_PER_TWEET: number = 128;
+  MIN_LENGTH: number = 90;
+  option: any = {
+    prefix: false,
+    suffix: false,
+    withCount: false,
+    useSeparator: true
+  };
+}
 </script>
 
 <style lang="scss" scoped>
