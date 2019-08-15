@@ -21,7 +21,8 @@
     "lodash": "^4.17.15",
     "nuxt": "^2.8.0",
     "twitter-text": "^3.0.0",
-    "vue-material-design-icons": "^3.3.1"
+    "vue-material-design-icons": "^3.3.1",
+    "vue-scrollto": "^2.15.0"
   },
   "devDependencies": {
     "@nuxtjs/eslint-config": "^1.0.1",
