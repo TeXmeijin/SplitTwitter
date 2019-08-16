@@ -70,6 +70,10 @@ export default {
    ** See https://axios.nuxtjs.org/options
    */
   axios: {},
+  manifest: {
+    name: '分割ったー',
+    lang: 'ja'
+  },
   styleResources: {
     scss: [
       '~/assets/css/main.scss'
