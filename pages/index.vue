@@ -1,20 +1,28 @@
 <template lang="pug">
-  .sec-page
+  .sec-page(id="prg-page")
     .sec-content
       h1.s-title 分割ったー
+      .mod-resultMessage(v-if="latestResult !== null")
+        .message(:class="{error: latestResult === false}")
+          p.content(v-if="latestResult === true") 投稿が成功しました
+          p.content(v-else) 投稿が失敗しました
       .mod-login(v-if="!isLogined")
         p.s-paragraph 長い文章をいい感じの長さに区切ってツイートできます。使い方は文章を書いて投稿ボタンを押すだけ！
         .login
           button.login__button.s-button.block(@click="login") ① Twitterを連携する
       .mod-post
-        .post
+        .post(v-if="!isDraftState")
           .post__form(:class="{ disabled: !credential }")
             .post__form__label(v-if="!!user")
               img.s-avatar(v-if="user.photoURL" :src="user.photoURL")
               span.label {{ user.displayName }}
-            textarea.post__form__text.s-textarea.block(v-model="calcedContent" placeholder="ツイート内容を入力" rows="7" :disabled="!credential")
-            .post__form__counter
-              span {{ calcedContent.length }}/{{ MAX_LENGTH }}
+            limited-textarea(
+              v-model="content"
+              :maxLength="MAX_LENGTH"
+              placeHsssolder="ツイート内容を入力"
+              rows="7"
+              :disabled="!credential"
+            )
             .post__form__label
               settings
               span.label 設定
@@ -35,7 +43,21 @@
                 .option(@click="switchOption('useSeparator')")
                   component(:is="checkBoxComponent(option.useSeparator)")
                   span.option__label 区切る
-            button(:disabled="!canPost" @click="onPost").s-button.block.post__form__submit ② 投稿する
+            button(:disabled="!canPost" @click="onDraft").s-button.block.post__form__submit ② 確認する
+        .draft(v-else)
+          h2.s-subtitle 投稿内容の確認
+          .draft__back
+            button.s-button.abnormal(@click="isDraftState = false") ＜ 戻る
+          .draft__form
+            ul.draft__form__chunkedForm
+              template(v-for="(_, index) in sendContentArray")
+                li.chunked
+                  limited-textarea(
+                    v-model="sendContentArray[index]"
+                    :maxLength="TWITTER_MAX_LENGTH"
+                    rows="8"
+                  )
+            button(:disabled="!canPost" @click="onPost").s-button.block.post__form__submit ③ 投稿する
       .mod-logout(v-if="!!credential")
         .logout
           button.logout__button.s-button.abnormal(@click="onLogout(uid)") ログアウト
@@ -58,6 +80,7 @@ import max from "lodash/max";
   // },
   computed: {
     ...mapState("auth", ["user", "uid", "credential"]),
+    ...mapState("tweet", ["latestResult"]),
     calcedContent: {
       get() {
         return this.content.substr(0, this.MAX_LENGTH);
@@ -84,7 +107,7 @@ import max from "lodash/max";
     isWithSuffix() {
       return !this.option.withCount && this.option.suffix;
     },
-    splitedTwitterTexts() {
+    splittedContent() {
       let str = this.calcedContent;
       const parsed = twitter.parseTweet(str);
       if (parsed.valid) {
@@ -153,18 +176,37 @@ import max from "lodash/max";
       logout: "auth/logout",
       post: "tweet/post"
     }),
+    ...mapMutations({
+      setResult: "tweet/setResult"
+    }),
+    onDraft() {
+      this.isDraftState = true;
+      this.sendContentArray = this.splittedContent;
+      this.scrollToTop();
+      this.setResult(null);
+    },
     onPost() {
       if (!this.isValidContent) return false;
       if (!this.credential) return false;
 
+      const bodyArray = this.sendContentArray.filter(tweet => !!tweet);
+
+      this.$nextTick(() => {
+        this.$nuxt.$loading.start();
+      });
       this.post({
         uid: this.uid,
-        post: { bodyArray: this.splitedTwitterTexts }
+        post: { bodyArray }
       });
     },
     onLogout(uid) {
       this.content = "";
+      this.resetViewStatus();
       this.logout(uid);
+    },
+    resetViewStatus() {
+      this.isDraftState = false;
+      this.scrollToTop();
     },
     checkBoxComponent(bool) {
       if (bool) {
@@ -177,14 +219,21 @@ import max from "lodash/max";
         return;
       }
       this.option[key] = !this.option[key];
+    },
+    scrollToTop() {
+      var VueScrollTo = require("vue-scrollto");
+      VueScrollTo.scrollTo("body");
     }
   },
   data() {
     return {
       content: "",
+      sendContentArray: [],
+      isDraftState: false,
       MAX_LENGTH: 3000,
       MAX_LENGTH_PER_TWEET: 128,
       MIN_LENGTH: 90,
+      TWITTER_MAX_LENGTH: 140,
       option: {
         prefix: false,
         suffix: false,
@@ -213,6 +262,29 @@ export default class Index extends Vue {
   margin-bottom: 40px;
 }
 
+.mod-resultMessage {
+  margin-bottom: 20px;
+
+  .message {
+    padding: 20px;
+    background: lighten($accent, 20%);
+    border-radius: 10px;
+
+    &.error {
+      background: lighten($error, 20%);
+
+      .content {
+        color: $error;
+      }
+    }
+
+    .content {
+      color: $accent;
+      font-weight: bold;
+    }
+  }
+}
+
 .mod-post {
   padding: 20px 0;
   .post {
@@ -233,15 +305,6 @@ export default class Index extends Vue {
         .label {
           margin-left: 5px;
         }
-      }
-      &__text {
-        margin-bottom: 10px;
-      }
-      &__counter {
-        display: flex;
-        justify-content: flex-end;
-        margin-bottom: 10px;
-        color: $gray-light-1;
       }
       &__options {
         display: flex;
@@ -274,6 +337,22 @@ export default class Index extends Vue {
             &__label {
               margin-left: 5px;
             }
+          }
+        }
+      }
+    }
+  }
+  .draft {
+    &__form {
+      &__chunkedForm {
+        .chunked {
+          margin-bottom: 20px;
+
+          &__counter {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 10px;
+            color: $gray-light-1;
           }
         }
       }

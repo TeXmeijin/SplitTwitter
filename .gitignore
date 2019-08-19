@@ -93,3 +93,4 @@ sw.*
 # firebase
 env.*
 .firebaserc
+hosting.*

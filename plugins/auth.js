@@ -27,6 +27,7 @@ export default ({
       const credential = result.credential
       store.dispatch('auth/setCredential', {
         uid: user.uid,
+        twitterId: user.providerData[0].uid,
         credential
       })
     })

@@ -8,6 +8,7 @@ import { DocumentData } from '@google-cloud/firestore';
 
 type Body = {
     bodyArray: string[],
+    uid: string,
 }
 
 const isBody = (item: any): item is Body => {
@@ -24,17 +25,17 @@ const isCredential = (item: any): item is Credential => {
 }
 
 exports.post = functions.firestore
-    .document('posts/{uid}')
-    .onWrite(async (change: functions.Change<DocumentSnapshot>, context: functions.EventContext) => {
-        const doc: DocumentData | undefined = change.after.data()
+    .document('posts/{postId}')
+    .onCreate(async (snapshot: DocumentSnapshot, context: functions.EventContext) => {
+        const doc: DocumentData | undefined = snapshot.data()
 
         if (!isBody(doc)) {
             console.log('body is not type of Body')
             return
         }
 
-        const { bodyArray } = doc
-        const { uid } = context.params
+        const { bodyArray, uid } = doc
+        const { postId } = context.params
 
         const db = admin.firestore();
         const credentialResponse: DocumentSnapshot = await db.doc(`/users/${uid}`).get()
@@ -56,6 +57,8 @@ exports.post = functions.firestore
         let id: string | null = null
         let screenName: string | null = null
 
+        let isSavedTweetId = false
+
         for (let body of bodyArray) {
             const requestBody: any = {}
             if (screenName !== null) {
@@ -69,8 +72,28 @@ exports.post = functions.firestore
                 .catch(function (error: any) {
                     // [ { code: 187, message: 'Status is a duplicate.' } ]
                     console.log(error);
+                    console.log(body);
                 })
+
+            if (!tweet) {
+                await db.collection('posts').doc(postId).update({
+                    result: false
+                })
+                break
+            }
+
             id = tweet.id_str
             screenName = tweet.user.screen_name
+
+            if (isSavedTweetId) {
+                continue
+            }
+
+            await db.collection('posts').doc(postId).update({
+                result: true,
+                tweetId: id,
+                created_at: new Date().getTime()
+            })
+            isSavedTweetId = true
         }
     })
