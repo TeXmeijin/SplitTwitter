@@ -96,6 +96,7 @@ export default class Index extends Vue {
   MAX_LENGTH_PER_TWEET: number = 128;
   MIN_LENGTH: number = 90;
   TWITTER_MAX_LENGTH: number = 140;
+  TWITTER_CHAR_LENGTH: number = 280;
   isDraftState: boolean = false;
   sendContentArray: string[] = [];
   option: any = {
@@ -207,17 +208,30 @@ export default class Index extends Vue {
     let chunked: string[] = [];
     let count = 0;
     while (str && count++ < 1000) {
-      let currentLength = this.MAX_LENGTH_PER_TWEET;
+      let currentLength = this.TWITTER_CHAR_LENGTH;
       // 1. 句読点を考慮して120文字以下で文字列を作る
       if (this.option.useSeparator) {
-        const japanesePeriodIndex =
-          max([
-            str.lastIndexOf("。", currentLength),
-            str.lastIndexOf("、", currentLength),
-            str.lastIndexOf("\n", currentLength) - 1
+        let searchIndex = currentLength;
+        let count2 = 0;
+        while (searchIndex-- > this.MAX_LENGTH_PER_TWEET && count++ < 1000) {
+          /**
+           * 280文字以内で、最も後の句読点または改行を発見する
+           * そのIndexまでの文字列を切り取って、weightLengthを見る
+           * 280以下だったらOK。その時点でのsearchIndexをcurrentLengthに代入する
+           * 280以上だった場合、searchIndexにlastPeriodIndexを代入する
+           */
+          let lastPeriodIndex = max([
+            str.lastIndexOf("。", searchIndex),
+            str.lastIndexOf("、", searchIndex),
+            str.lastIndexOf("\n", searchIndex) - 1
           ]) + 1;
-        if (japanesePeriodIndex > this.MIN_LENGTH) {
-          currentLength = japanesePeriodIndex;
+
+          const realLength = twitter.parseTweet(str.substr(0, lastPeriodIndex)).weightedLength
+          if (realLength < this.TWITTER_CHAR_LENGTH) {
+            currentLength = lastPeriodIndex
+            break;
+          }
+          searchIndex = lastPeriodIndex - 1
         }
       }
 
@@ -249,7 +263,7 @@ export default class Index extends Vue {
     if (!this.calcedContent) {
       return false;
     }
-    if (this.calcedContent.length > this.MAX_LENGTH) {
+    if (twitter.parseTweet(this.calcedContent).weightLength > this.TWITTER_CHAR_LENGTH) {
       return false;
     }
     return true;

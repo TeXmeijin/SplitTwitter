@@ -2,11 +2,12 @@
   .s-limited
     textarea.s-limited__form.s-textarea.block(:value="calcedContent" @input="onInput($event.target.value)" :placeholder="placeHolder" :rows="rows" :disabled="disabled")
     .s-limited__counter
-      span {{ calcedContent.length }}/{{ maxLength }}
+      span {{ calcedContentLength }}/{{ maxLength }}
 </template>
 
 <script lang="ts">
 import { Component, Vue, Prop, Emit } from "vue-property-decorator";
+import twitter from "twitter-text";
 
 @Component
 export default class LimitedTextarea extends Vue {
@@ -31,7 +32,11 @@ export default class LimitedTextarea extends Vue {
   }
 
   public get calcedContent(): string {
-    return this.value.substr(0, this.maxLength);
+    return this.value;
+  }
+
+  public get calcedContentLength(): number {
+    return Math.ceil(twitter.parseTweet(this.calcedContent).weightedLength / 2)
   }
 }
 </script>
