@@ -5,6 +5,38 @@
       span {{ calcedContent.length }}/{{ maxLength }}
 </template>
 
+<script lang="ts">
+import { Component, Vue, Prop, Emit } from "vue-property-decorator";
+
+@Component
+export default class LimitedTextarea extends Vue {
+  @Prop()
+  public value!: string;
+
+  @Prop()
+  public maxLength!: number;
+
+  @Prop({ default: "ここに入力" })
+  public placeHolder!: string;
+
+  @Prop({ default: false })
+  public disabled!: boolean;
+
+  @Prop({ default: 5 })
+  public rows!: number;
+
+  @Emit("input")
+  public onInput(val: any) {
+    return val;
+  }
+
+  public get calcedContent(): string {
+    return this.value.substr(0, this.maxLength);
+  }
+}
+</script>
+
+
 <style lang="scss" scoped>
 .s-limited {
   &__form {
@@ -18,41 +50,3 @@
   }
 }
 </style>
-
-
-<script>
-export default {
-  methods: {
-    onInput(val) {
-      this.$emit("input", val);
-    }
-  },
-  computed: {
-    calcedContent() {
-      return this.value.substr(0, this.maxLength);
-    }
-  },
-  props: {
-    value: {
-      type: String,
-      required: true
-    },
-    maxLength: {
-      type: Number,
-      required: true
-    },
-    placeHolder: {
-      type: String,
-      default: "ここに入力"
-    },
-    disabled: {
-      type: Boolean,
-      default: false
-    },
-    rows: {
-      type: String,
-      default: "5"
-    }
-  }
-};
-</script>

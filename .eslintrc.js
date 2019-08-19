@@ -15,11 +15,15 @@ module.exports = {
     "require": false
   },
   "parserOptions": {
+    parser: '@typescript-eslint/parser',
     "ecmaVersion": 2018,
-    "sourceType": "module"
+    "sourceType": "module",
   },
   "plugins": [
-    "vue"
+    "vue",
+    '@typescript-eslint'
   ],
-  "rules": {}
+  "rules": {
+    "no-unused-vars": "off"
+  }
 };

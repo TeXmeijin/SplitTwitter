@@ -4,7 +4,7 @@ export default ({
   store
 }) => {
   if (process.browser) {
-    const setUser = user => {
+    const setUser = (user: firebase.User | null) => {
       if (!user) {
         store.commit('auth/setUser', null)
         return false
@@ -20,14 +20,14 @@ export default ({
     }
     firebase.auth().getRedirectResult().then((result) => {
       const user = result.user
-      if (!setUser(user)) {
+      if (!user || !setUser(user)) {
         return
       }
 
       const credential = result.credential
       store.dispatch('auth/setCredential', {
         uid: user.uid,
-        twitterId: user.providerData[0].uid,
+        twitterId: user.providerData[0]!.uid,
         credential
       })
     })

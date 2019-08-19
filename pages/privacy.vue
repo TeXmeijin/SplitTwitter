@@ -18,3 +18,10 @@
       h2.s-subtitle 第５条 プライバシーポリシーの改定
       p.s-paragraph.small 当社は個人情報保護上の必要に応じて、本方針を改定する場合があります。改定が行われた時点で、新しい方針が適用されるものといたします。
 </template>
+
+<script lang="ts">
+import { Component, Vue } from "vue-property-decorator";
+
+@Component
+export default class Privacy extends Vue {}
+</script>

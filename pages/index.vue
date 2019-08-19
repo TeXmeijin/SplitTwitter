@@ -63,199 +63,204 @@
           button.logout__button.s-button.abnormal(@click="onLogout(uid)") ログアウト
 </template>
 
-<script>
-import { mapState, mapActions, mapMutations } from "vuex";
+<script lang="ts">
+import { Component, Vue, Watch } from "vue-property-decorator";
+import { namespace } from "vuex-class";
+import * as tweet from "~/store/tweet";
+const Tweet = namespace(tweet.name);
+
+import * as auth from "~/store/auth";
+const Auth = namespace(auth.name);
+
+import TweetPost from "@/models/TweetPost";
 import twitter from "twitter-text";
+import VueScrollTo from "vue-scrollto";
+
 import max from "lodash/max";
-import LimitedTextarea from "@/components/form/LimitedTextarea";
+import LimitedTextarea from "@/components/form/LimitedTextarea.vue";
 import CheckboxBlankOutline from "vue-material-design-icons/CheckboxBlankOutline.vue";
 import CheckboxMarked from "vue-material-design-icons/CheckboxMarked.vue";
 import Settings from "vue-material-design-icons/Settings.vue";
 
-export default {
+@Component({
   components: {
     CheckboxBlankOutline,
     CheckboxMarked,
     Settings,
     LimitedTextarea
-  },
-  watch: {
-    latestResult(newResult) {
-      this.$nuxt.$loading.finish();
-      if (newResult !== null) {
-        this.resetViewStatus();
-
-        if (newResult === true) {
-          this.content = "";
-        }
-      }
-    }
-  },
-  computed: {
-    ...mapState("auth", ["user", "uid", "credential"]),
-    ...mapState("tweet", ["latestResult"]),
-    calcedContent: {
-      get() {
-        return this.content.substr(0, this.MAX_LENGTH);
-      },
-      set(str) {
-        this.content = str.substr(0, this.MAX_LENGTH);
-      }
-    },
-    prefixText() {
-      if (this.isWithPrefix) {
-        return "(続き)";
-      }
-      return "";
-    },
-    isWithPrefix() {
-      return !this.option.withCount && this.option.prefix;
-    },
-    suffixText() {
-      if (this.isWithSuffix) {
-        return "(続く)";
-      }
-      return "";
-    },
-    isWithSuffix() {
-      return !this.option.withCount && this.option.suffix;
-    },
-    splittedContent() {
-      let str = this.calcedContent;
-      const parsed = twitter.parseTweet(str);
-      if (parsed.valid) {
-        return [str];
-      }
-      let chunked = [];
-      let count = 0;
-      while (str && count++ < 1000) {
-        let currentLength = this.MAX_LENGTH_PER_TWEET;
-        // 1. 句読点を考慮して120文字以下で文字列を作る
-        if (this.option.useSeparator) {
-          const japanesePeriodIndex =
-            max([
-              str.lastIndexOf("。", currentLength),
-              str.lastIndexOf("、", currentLength),
-              str.lastIndexOf("\n", currentLength) - 1
-            ]) + 1;
-          if (japanesePeriodIndex > this.MIN_LENGTH) {
-            currentLength = japanesePeriodIndex;
-          }
-        }
-
-        let content = str.substr(0, currentLength);
-
-        // 2. (続く)などの前後テキストを付ける
-        if (count > 1) {
-          content = this.prefixText + content;
-        }
-
-        // 3. str自体を削る
-        str = str.slice(currentLength);
-        if (str) {
-          content = content + this.suffixText;
-        }
-
-        // 4. chunkに突っ込む
-        chunked.push(content);
-      }
-      if (this.option.withCount) {
-        const len = chunked.length;
-        for (let i = 0; i < len; i++) {
-          chunked[i] = `(${i + 1}/${len})\n${chunked[i]}`;
-        }
-      }
-      return chunked;
-    },
-    isValidContent() {
-      if (!this.calcedContent) {
-        return false;
-      }
-      if (!this.calcedContent.length > this.MAX_LENGTH) {
-        return false;
-      }
-      return true;
-    },
-    isLogined() {
-      return !!this.user && !!this.uid && !!this.credential;
-    },
-    canPost() {
-      return this.isLogined && this.isValidContent;
-    }
-  },
-  methods: {
-    ...mapActions({
-      login: "auth/login",
-      logout: "auth/logout",
-      post: "tweet/post"
-    }),
-    ...mapMutations({
-      setResult: "tweet/setResult"
-    }),
-    onDraft() {
-      this.isDraftState = true;
-      this.sendContentArray = this.splittedContent;
-      this.scrollToTop();
-      this.setResult(null);
-    },
-    onPost() {
-      if (!this.isValidContent) return false;
-      if (!this.credential) return false;
-
-      const bodyArray = this.sendContentArray.filter(tweet => !!tweet);
-
-      this.$nextTick(() => {
-        this.$nuxt.$loading.start();
-      });
-      this.post({
-        uid: this.uid,
-        post: { bodyArray }
-      });
-    },
-    onLogout(uid) {
-      this.content = "";
-      this.resetViewStatus();
-      this.logout(uid);
-    },
-    resetViewStatus() {
-      this.isDraftState = false;
-      this.scrollToTop();
-    },
-    checkBoxComponent(bool) {
-      if (bool) {
-        return "checkbox-marked";
-      }
-      return "checkbox-blank-outline";
-    },
-    switchOption(key) {
-      if (!this.isLogined) {
-        return;
-      }
-      this.option[key] = !this.option[key];
-    },
-    scrollToTop() {
-      var VueScrollTo = require("vue-scrollto");
-      VueScrollTo.scrollTo("body");
-    }
-  },
-  data() {
-    return {
-      content: "",
-      sendContentArray: [],
-      isDraftState: false,
-      MAX_LENGTH: 3000,
-      MAX_LENGTH_PER_TWEET: 128,
-      MIN_LENGTH: 90,
-      TWITTER_MAX_LENGTH: 140,
-      option: {
-        prefix: false,
-        suffix: false,
-        withCount: false,
-        useSeparator: true
-      }
-    };
   }
-};
+})
+export default class Index extends Vue {
+  content: string = "";
+  MAX_LENGTH: number = 3000;
+  MAX_LENGTH_PER_TWEET: number = 128;
+  MIN_LENGTH: number = 90;
+  TWITTER_MAX_LENGTH: number = 140;
+  isDraftState: boolean = false;
+  sendContentArray: string[] = [];
+  option: any = {
+    prefix: false,
+    suffix: false,
+    withCount: false,
+    useSeparator: true
+  };
+
+  @Watch("latestResult")
+  onLatestResultChanged(newResult: Boolean) {
+    this.$nuxt.$loading.finish();
+    if (newResult !== null) {
+      this.resetViewStatus();
+
+      if (newResult === true) {
+        this.content = "";
+      }
+    }
+  }
+
+  @Auth.Action login;
+  @Auth.Action logout;
+  @Tweet.Action post;
+  @Tweet.Mutation setResult;
+
+  onDraft() {
+    this.isDraftState = true;
+    this.sendContentArray = this.splittedContent;
+    this.scrollToTop();
+    this.setResult(null);
+  }
+  onPost() {
+    if (!this.isValidContent) return false;
+    if (!this.credential) return false;
+
+    const bodyArray = this.sendContentArray.filter(tweet => !!tweet);
+
+    this.$nextTick(() => {
+      this.$nuxt.$loading.start();
+    });
+    const tweetPost: TweetPost = {
+      uid: this.uid,
+      bodyArray
+    };
+    this.post(tweetPost);
+  }
+  onLogout(uid) {
+    this.content = "";
+    this.setResult(null);
+    this.resetViewStatus();
+    this.logout(uid);
+  }
+  resetViewStatus() {
+    this.isDraftState = false;
+    this.scrollToTop();
+  }
+  checkBoxComponent(bool) {
+    if (bool) {
+      return "checkbox-marked";
+    }
+    return "checkbox-blank-outline";
+  }
+  switchOption(key) {
+    if (!this.isLogined) {
+      return;
+    }
+    this.option[key] = !this.option[key];
+  }
+  scrollToTop() {
+    VueScrollTo.scrollTo("body");
+  }
+
+  @Auth.State user;
+  @Auth.State uid;
+  @Auth.State credential;
+  @Tweet.State latestResult;
+
+  public get calcedContent(): string {
+    return this.content.substr(0, this.MAX_LENGTH);
+  }
+  public set calcedContent(str: string) {
+    this.content = str.substr(0, this.MAX_LENGTH);
+  }
+  public get prefixText() {
+    if (this.isWithPrefix) {
+      return "(続き)";
+    }
+    return "";
+  }
+  public get isWithPrefix() {
+    return !this.option.withCount && this.option.prefix;
+  }
+  public get suffixText() {
+    if (this.isWithSuffix) {
+      return "(続く)";
+    }
+    return "";
+  }
+  public get isWithSuffix() {
+    return !this.option.withCount && this.option.suffix;
+  }
+  public get splittedContent() {
+    let str = this.calcedContent;
+    const parsed = twitter.parseTweet(str);
+    if (parsed.valid) {
+      return [str];
+    }
+    let chunked: string[] = [];
+    let count = 0;
+    while (str && count++ < 1000) {
+      let currentLength = this.MAX_LENGTH_PER_TWEET;
+      // 1. 句読点を考慮して120文字以下で文字列を作る
+      if (this.option.useSeparator) {
+        const japanesePeriodIndex =
+          max([
+            str.lastIndexOf("。", currentLength),
+            str.lastIndexOf("、", currentLength),
+            str.lastIndexOf("\n", currentLength) - 1
+          ]) + 1;
+        if (japanesePeriodIndex > this.MIN_LENGTH) {
+          currentLength = japanesePeriodIndex;
+        }
+      }
+
+      let content: string = str.substr(0, currentLength);
+
+      // 2. (続く)などの前後テキストを付ける
+      if (count > 1) {
+        content = this.prefixText + content;
+      }
+
+      // 3. str自体を削る
+      str = str.slice(currentLength);
+      if (str) {
+        content = content + this.suffixText;
+      }
+
+      // 4. chunkに突っ込む
+      chunked.push(content);
+    }
+    if (this.option.withCount) {
+      const len = chunked.length;
+      for (let i = 0; i < len; i++) {
+        chunked[i] = `(${i + 1}/${len})\n${chunked[i]}`;
+      }
+    }
+    return chunked;
+  }
+  public get isValidContent() {
+    if (!this.calcedContent) {
+      return false;
+    }
+    if (this.calcedContent.length > this.MAX_LENGTH) {
+      return false;
+    }
+    return true;
+  }
+  public get isLogined() {
+    return !!this.user && !!this.uid && !!this.credential;
+  }
+  public get canPost() {
+    return this.isLogined && this.isValidContent;
+  }
+}
 </script>
 
 <style lang="scss" scoped>
