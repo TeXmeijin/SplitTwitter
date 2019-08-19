@@ -26,8 +26,8 @@ const isCredential = (item: any): item is Credential => {
 
 exports.post = functions.firestore
     .document('posts/{postId}')
-    .onWrite(async (change: functions.Change<DocumentSnapshot>, context: functions.EventContext) => {
-        const doc: DocumentData | undefined = change.after.data()
+    .onCreate(async (snapshot: DocumentSnapshot, context: functions.EventContext) => {
+        const doc: DocumentData | undefined = snapshot.data()
 
         if (!isBody(doc)) {
             console.log('body is not type of Body')
@@ -72,7 +72,9 @@ exports.post = functions.firestore
                 .catch(function (error: any) {
                     // [ { code: 187, message: 'Status is a duplicate.' } ]
                     console.log(error);
+                    console.log(body);
                 })
+
             if (!tweet) {
                 await db.collection('posts').doc(postId).update({
                     result: false
@@ -89,7 +91,8 @@ exports.post = functions.firestore
 
             await db.collection('posts').doc(postId).update({
                 result: true,
-                tweetId: id
+                tweetId: id,
+                created_at: new Date().getTime()
             })
             isSavedTweetId = true
         }

@@ -46,13 +46,17 @@ export const actions = {
     commit
   }, {
     uid,
+    twitterId,
     credential
   }) {
     const db = firebase.firestore();
-    db.collection("users").doc(uid).set(pick(
+    db.collection("users").doc(uid).set(Object.assign({
+      twitterId,
+      created_at: new Date().getTime()
+    }, pick(
       credential,
       ['accessToken', 'secret']
-    ))
+    )))
     commit('setCredential', credential)
   }
 }
