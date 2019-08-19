@@ -1,20 +1,35 @@
 import firebase from 'firebase'
 import pick from "lodash/pick";
+import {
+  ActionTree,
+  MutationTree,
+  GetterTree
+} from 'vuex';
 
-export const state = () => ({
+interface RootState { }
+
+interface AuthState {
+  user: firebase.UserInfo | null;
+  uid: string | null;
+  credential: any | null;
+}
+
+export const name = 'auth'
+
+export const state = (): AuthState => ({
   user: null,
   uid: null,
-  credential: null,
+  credential: null
 })
 
-export const mutations = {
-  setUser(state, user) {
+export const mutations: MutationTree<AuthState> = {
+  setUser: (state: AuthState, user) => {
     state.user = user
   },
-  setUid(state, uid) {
+  setUid: (state: AuthState, uid: string) => {
     state.uid = uid
   },
-  setCredential(state, credential) {
+  setCredential: (state: AuthState, credential: any) => {
     if (!credential || !state.uid) {
       state.credential = null
       return
@@ -27,14 +42,14 @@ export const mutations = {
   }
 }
 
-export const actions = {
-  login() {
+export const actions: ActionTree<AuthState, RootState> = {
+  login: () => {
     const provider = new firebase.auth.TwitterAuthProvider()
     firebase.auth().signInWithRedirect(provider)
   },
-  logout({
+  logout: ({
     commit
-  }, uid) {
+  }, uid: string) => {
     firebase.auth().signOut()
 
     commit('setUid', null)
@@ -42,13 +57,13 @@ export const actions = {
     commit('setCredential', null)
     firebase.firestore().collection('users').doc(uid).set({})
   },
-  setCredential({
+  setCredential: ({
     commit
   }, {
     uid,
     twitterId,
     credential
-  }) {
+  }) => {
     const db = firebase.firestore();
     db.collection("users").doc(uid).set(Object.assign({
       twitterId,
