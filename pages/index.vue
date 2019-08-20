@@ -217,7 +217,7 @@ export default class Index extends Vue {
           /**
            * 280文字以内で、最も後の句読点または改行を発見する
            * そのIndexまでの文字列を切り取って、weightLengthを見る
-           * 280以下だったらOK。その時点でのsearchIndexをcurrentLengthに代入する
+           * 280以下だったらOK。その時点でのlastPeriodIndexをcurrentLengthに代入する
            * 280以上だった場合、searchIndexにlastPeriodIndexを代入する
            */
           let lastPeriodIndex = max([
